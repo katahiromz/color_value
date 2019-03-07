@@ -2,7 +2,7 @@
 /* Copyright (C) 2019 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com> */
 /* This file is public domain software. */
 #ifndef COLOR_VALUE_H_
-#define COLOR_VALUE_H_  4   /* Version 4 */
+#define COLOR_VALUE_H_  5   /* Version 5 */
 
 #if defined(__cplusplus) && (__cplusplus >= 201103L)    /* C++11 */
     #include <cstdint>
@@ -226,6 +226,20 @@ static __inline uint32_t color_value_fix(uint32_t value)
     return (b << 16) | (g << 8) | r;
 }
 
+static __inline uint32_t color_value_web_safe(uint32_t value)
+{
+    uint32_t r = (uint8_t)(value >> 16);
+    uint32_t g = (uint8_t)(value >> 8);
+    uint32_t b = (uint8_t)value;
+    r = ((r + 0x33 / 2) / 0x33) * 0x33;
+    g = ((g + 0x33 / 2) / 0x33) * 0x33;
+    b = ((b + 0x33 / 2) / 0x33) * 0x33;
+    assert(0 <= r && r <= 0xFF);
+    assert(0 <= g && g <= 0xFF);
+    assert(0 <= b && b <= 0xFF);
+    return (r << 16) | (g << 8) | b;
+}
+
 static __inline void color_value_strlwr(char *dest, const char *src, size_t max_len)
 {
 #ifdef __cplusplus
@@ -346,6 +360,23 @@ static __inline void color_value_unittest(void)
     assert(color_value_fix(0xFF0000) == 0x0000FF);
     assert(color_value_fix(0xFFFF00) == 0x00FFFF);
     assert(color_value_fix(0x0000FF) == 0xFF0000);
+
+    assert(color_value_web_safe(0xFFFFFF) == 0xFFFFFF);
+    assert(color_value_web_safe(0xEEFFFF) == 0xFFFFFF);
+    assert(color_value_web_safe(0xEEEEFF) == 0xFFFFFF);
+    assert(color_value_web_safe(0x2222FF) == 0x3333FF);
+    assert(color_value_web_safe(0x1122FF) == 0x0033FF);
+    assert(color_value_web_safe(0x0022FF) == 0x0033FF);
+    assert(color_value_web_safe(0xFF0088) == 0xFF0099);
+    assert(color_value_web_safe(0xFFEE00) == 0xFFFF00);
 }
+
+#if 0
+int main(void)
+{
+    color_value_unittest();
+    return 0;
+}
+#endif
 
 #endif  /* ndef COLOR_VALUE_H_ */
