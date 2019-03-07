@@ -2,7 +2,7 @@
 /* Copyright (C) 2019 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com> */
 /* This file is public domain software. */
 #ifndef COLOR_VALUE_H_
-#define COLOR_VALUE_H_  12   /* Version 12 */
+#define COLOR_VALUE_H_  13   /* Version 13 */
 
 #if defined(__cplusplus) && (__cplusplus >= 201103L)    /* C++11 */
     #include <cstdint>
@@ -280,7 +280,8 @@ static __inline uint32_t color_value_parse(const char *color_name)
 #ifdef __cplusplus
     using namespace std;
 #endif
-    if (!color_name || !color_name[0])
+    assert(color_name != NULL);
+    if (!color_name[0])
         return (uint32_t)(-1);
 
     if (color_name[0] == '#')
@@ -351,11 +352,12 @@ static __inline uint8_t color_value_min(uint8_t a, uint8_t b)
 
 static __inline float color_value_fabs(float f)
 {
-    return f > 0 ? f : -f;
+    return f >= 0 ? f : -f;
 }
 
 /* *h, *s, *v in [0, 1]. */
-static __inline void color_value_to_hsv(uint32_t rgb, float *h, float *s, float *v)
+static __inline void
+color_value_to_hsv(uint32_t rgb, float *h, float *s, float *v)
 {
     uint8_t r = (uint8_t)(rgb >> 16);
     uint8_t g = (uint8_t)(rgb >> 8);
@@ -363,23 +365,22 @@ static __inline void color_value_to_hsv(uint32_t rgb, float *h, float *s, float 
     uint8_t max_ = color_value_max(color_value_max(r, g), b);
     uint8_t min_ = color_value_min(color_value_min(r, g), b);
     float max_value = max_ / 255.0f, min_value = min_ / 255.0f;
-    float r_value = r / 255.0f, g_value = g / 255.0f, b_value = b / 255.0f;
     float hue = max_value - min_value, sat;
     if (hue > 0)
     {
         if (max_ == r)
         {
-            hue = (g_value - b_value) / hue;
+            hue = (g - b) / (hue * 255.0f);
             if (hue < 0)
                 hue += 6.0f;
         }
         else if (max_ == g)
         {
-            hue = 2.0f + (b_value - r_value) / hue;
+            hue = 2.0f + (b - r) / (hue * 255.0f);
         }
         else
         {
-            hue = 4.0f + (r_value - g_value) / hue;
+            hue = 4.0f + (r - g) / (hue * 255.0f);
         }
     }
     *h = hue / 6.0f;
@@ -388,17 +389,21 @@ static __inline void color_value_to_hsv(uint32_t rgb, float *h, float *s, float 
         sat /= max_value;
     *s = sat;
     *v = max_value;
-    assert(0.0f <= *h && *h <= 1.0f);
-    assert(0.0f <= *s && *s <= 1.0f);
-    assert(0.0f <= *v && *v <= 1.0f);
+    assert(0 <= *h && *h <= 1);
+    assert(0 <= *s && *s <= 1);
+    assert(0 <= *v && *v <= 1);
 }
 
 /* h, s, v in [0, 1]. */
-static __inline void color_value_from_hsv(uint32_t *rgb, float h, float s, float v)
+static __inline void
+color_value_from_hsv(uint32_t *rgb, float h, float s, float v)
 {
     int i;
     float f, r, g, b;
     uint32_t r_value, g_value, b_value;
+    assert(0 <= h && h <= 1);
+    assert(0 <= s && s <= 1);
+    assert(0 <= v && v <= 1);
     r = g = b = v;
     if (s > 0)
     {
@@ -439,6 +444,7 @@ static __inline void color_value_from_hsv(uint32_t *rgb, float h, float s, float
     g_value = (uint8_t)(g * 255 + 0.5f);
     b_value = (uint8_t)(b * 255 + 0.5f);
     *rgb = (r_value << 16) | (g_value << 8) | b_value;
+    assert(color_value_valid(*rgb));
 }
 
 static __inline void color_value_unittest(void)
