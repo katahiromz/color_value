@@ -2,7 +2,7 @@
 /* Copyright (C) 2019 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com> */
 /* This file is public domain software. */
 #ifndef COLOR_VALUE_H_
-#define COLOR_VALUE_H_  11   /* Version 11 */
+#define COLOR_VALUE_H_  12   /* Version 12 */
 
 #if defined(__cplusplus) && (__cplusplus >= 201103L)    /* C++11 */
     #include <cstdint>
@@ -388,6 +388,9 @@ static __inline void color_value_to_hsv(uint32_t rgb, float *h, float *s, float 
         sat /= max_value;
     *s = sat;
     *v = max_value;
+    assert(0.0f <= *h && *h <= 1.0f);
+    assert(0.0f <= *s && *s <= 1.0f);
+    assert(0.0f <= *v && *v <= 1.0f);
 }
 
 /* h, s, v in [0, 1]. */
