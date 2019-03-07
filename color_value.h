@@ -2,7 +2,7 @@
 /* Copyright (C) 2019 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com> */
 /* This file is public domain software. */
 #ifndef COLOR_VALUE_H_
-#define COLOR_VALUE_H_  6   /* Version 6 */
+#define COLOR_VALUE_H_  7   /* Version 7 */
 
 #if defined(__cplusplus) && (__cplusplus >= 201103L)    /* C++11 */
     #include <cstdint>
@@ -62,7 +62,7 @@ typedef struct COLOR_VALUE_HEX
 const char *color_value_find(const char *name)
 {
 #if defined(__cplusplus) && (__cplusplus >= 201103L)    /* C++11 */
-    static std::unordered_map<std::string, std::string> s_map =
+    static const std::unordered_map<std::string, std::string> s_map =
 #else
     /* names are in lower case */
     static const COLOR_VALUE_HEX s_table[] =
