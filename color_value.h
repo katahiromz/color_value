@@ -2,7 +2,7 @@
 /* Copyright (C) 2019 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com> */
 /* This file is public domain software. */
 #ifndef COLOR_VALUE_H_
-#define COLOR_VALUE_H_  5   /* Version 5 */
+#define COLOR_VALUE_H_  6   /* Version 6 */
 
 #if defined(__cplusplus) && (__cplusplus >= 201103L)    /* C++11 */
     #include <cstdint>
@@ -48,16 +48,25 @@
     using std::size_t;
 #endif
 
+#if defined(__cplusplus) && (__cplusplus >= 201103L)    /* C++11 */
+    #include <unordered_map>
+    #include <string>
+#endif
+
 typedef struct COLOR_VALUE_HEX
 {
     const char *name;
     const char *hex;
 } COLOR_VALUE_HEX;
 
-static __inline const COLOR_VALUE_HEX *color_value_table(size_t *pcount)
+const char *color_value_find(const char *name)
 {
+#if defined(__cplusplus) && (__cplusplus >= 201103L)    /* C++11 */
+    static std::unordered_map<std::string, std::string> s_map =
+#else
     /* names are in lower case */
     static const COLOR_VALUE_HEX s_table[] =
+#endif
     {
         { "black", "#000000" },
         { "white", "#ffffff" },
@@ -208,9 +217,19 @@ static __inline const COLOR_VALUE_HEX *color_value_table(size_t *pcount)
         { "yellowgreen", "#9acd32" },
         { "rebeccapurple", "#663399" },
     };
-    const size_t count = sizeof(s_table) / sizeof(s_table[0]);
-    *pcount = count;
-    return s_table;
+#if defined(__cplusplus) && (__cplusplus >= 201103L)    /* C++11 */
+    auto it = s_map.find(name);
+    if (it != s_map.end())
+        return it->second.c_str();
+#else
+    size_t i, count = sizeof(s_table) / sizeof(s_table[0]);
+    for (i = 0; i < count; ++i)
+    {
+        if (strcmp(s_table[i].name, name) == 0)
+            return s_table[i].hex;
+    }
+#endif
+    return NULL;
 }
 
 static __inline int color_value_valid(uint32_t value)
@@ -289,16 +308,14 @@ static __inline uint32_t color_value_parse(const char *color_name)
     }
     else
     {
-        size_t i, count;
         char name[64];
-        const COLOR_VALUE_HEX *table;
+        const char *hex;
         color_value_strlwr(name, color_name, 64);
 
-        table = color_value_table(&count);
-        for (i = 0; i < count; ++i)
+        hex = color_value_find(name);
+        if (hex)
         {
-            if (strcmp(table[i].name, name) == 0)
-                return color_value_parse(table[i].hex);
+            return color_value_parse(hex);
         }
     }
 
@@ -371,7 +388,7 @@ static __inline void color_value_unittest(void)
     assert(color_value_web_safe(0xFFEE00) == 0xFFFF00);
 }
 
-#if 0
+#if 1
 int main(void)
 {
     color_value_unittest();
