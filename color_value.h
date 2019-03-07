@@ -2,7 +2,7 @@
 /* Copyright (C) 2019 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com> */
 /* This file is public domain software. */
 #ifndef COLOR_VALUE_H_
-#define COLOR_VALUE_H_  10   /* Version 10 */
+#define COLOR_VALUE_H_  11   /* Version 11 */
 
 #if defined(__cplusplus) && (__cplusplus >= 201103L)    /* C++11 */
     #include <cstdint>
@@ -61,6 +61,9 @@ typedef struct COLOR_VALUE_HEX
 
 static __inline const char *color_value_find(const char *name)
 {
+#ifdef __cplusplus
+    using namespace std;
+#endif
 #if defined(__cplusplus) && (__cplusplus >= 201103L)    /* C++11 */
     static const std::unordered_map<std::string, std::string> s_map =
 #else
@@ -350,9 +353,9 @@ static __inline float color_value_fabs(float f)
     return f > 0 ? f : -f;
 }
 
+/* *h, *s, *v in [0, 1]. */
 static __inline void color_value_to_hsv(uint32_t rgb, float *h, float *s, float *v)
 {
-    // h, s, v in [0, 1].
     uint8_t r = (uint8_t)(rgb >> 16);
     uint8_t g = (uint8_t)(rgb >> 8);
     uint8_t b = (uint8_t)rgb;
@@ -386,9 +389,9 @@ static __inline void color_value_to_hsv(uint32_t rgb, float *h, float *s, float 
     *v = max_value;
 }
 
+/* h, s, v in [0, 1]. */
 static __inline void color_value_from_hsv(uint32_t *rgb, float h, float s, float v)
 {
-    // h, s, v in [0, 1].
     int i;
     float f, r, g, b;
     uint32_t r_value, g_value, b_value;
