@@ -30,13 +30,11 @@
     #include <cstdlib>
     #include <cstdio>
     #include <cstring>
-    #include <cctype>
     #include <cassert>
 #else
     #include <stdlib.h>
     #include <stdio.h>
     #include <string.h>
-    #include <ctype.h>
     #include <assert.h>
 #endif
 
@@ -269,7 +267,10 @@ static __inline void color_value_strlwr(char *dest, const char *src, size_t max_
 #endif
     for (; *src && max_len > 1; ++src, ++dest, --max_len)
     {
-        *dest = (char)tolower((unsigned char)*src);
+        if ('A' <= *src && *src <= 'Z')
+            *dest = *src + ('a' - 'A');
+        else
+            *dest = *src;
     }
     *dest = 0;
 }
