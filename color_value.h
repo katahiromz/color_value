@@ -2,7 +2,7 @@
 /* Copyright (C) 2019 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com> */
 /* This file is public domain software. */
 #ifndef COLOR_VALUE_H_
-#define COLOR_VALUE_H_  8   /* Version 8 */
+#define COLOR_VALUE_H_  9   /* Version 9 */
 
 #if defined(__cplusplus) && (__cplusplus >= 201103L)    /* C++11 */
     #include <cstdint>
@@ -332,9 +332,9 @@ static __inline void color_value_store(char *str, size_t max_len, uint32_t color
     assert(max_len >= 8);
     color_value &= 0xFFFFFF;
 #ifdef NO_STRSAFE
-    sprintf(str, "#%06x", color_value);
+    sprintf(str, "#%06X", color_value);
 #else
-    StringCchPrintfA(str, max_len, "#%06x", color_value);
+    StringCchPrintfA(str, max_len, "#%06X", color_value);
 #endif
 }
 
@@ -465,11 +465,11 @@ static __inline void color_value_unittest(void)
     assert(color_value_parse("#F00") == 0xFF0000);
 
     color_value_store(buf, 8, 0xFF0000);
-    assert(strcmp(buf, "#ff0000") == 0);
+    assert(strcmp(buf, "#FF0000") == 0);
     color_value_store(buf, 8, 0xFF00FF);
-    assert(strcmp(buf, "#ff00ff") == 0);
+    assert(strcmp(buf, "#FF00FF") == 0);
     color_value_store(buf, 8, 0x00FFFF);
-    assert(strcmp(buf, "#00ffff") == 0);
+    assert(strcmp(buf, "#00FFFF") == 0);
 
     assert(color_value_fix(0xFF0000) == 0x0000FF);
     assert(color_value_fix(0xFFFF00) == 0x00FFFF);
