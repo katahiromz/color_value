@@ -517,7 +517,7 @@ static __inline void color_value_unittest(void)
     puts("OK");
 }
 
-#if 1
+#if 0
 int main(void)
 {
     color_value_unittest();
