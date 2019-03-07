@@ -2,7 +2,7 @@
 /* Copyright (C) 2019 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com> */
 /* This file is public domain software. */
 #ifndef COLOR_VALUE_H_
-#define COLOR_VALUE_H_  9   /* Version 9 */
+#define COLOR_VALUE_H_  10   /* Version 10 */
 
 #if defined(__cplusplus) && (__cplusplus >= 201103L)    /* C++11 */
     #include <cstdint>
@@ -31,14 +31,12 @@
     #include <cstdio>
     #include <cstring>
     #include <cctype>
-    #include <cmath>
     #include <cassert>
 #else
     #include <stdlib.h>
     #include <stdio.h>
     #include <string.h>
     #include <ctype.h>
-    #include <math.h>
     #include <assert.h>
 #endif
 
@@ -61,7 +59,7 @@ typedef struct COLOR_VALUE_HEX
     const char *hex;
 } COLOR_VALUE_HEX;
 
-const char *color_value_find(const char *name)
+static __inline const char *color_value_find(const char *name)
 {
 #if defined(__cplusplus) && (__cplusplus >= 201103L)    /* C++11 */
     static const std::unordered_map<std::string, std::string> s_map =
@@ -338,13 +336,18 @@ static __inline void color_value_store(char *str, size_t max_len, uint32_t color
 #endif
 }
 
-static __inline float color_value_maxf(float a, float b)
+static __inline uint8_t color_value_max(uint8_t a, uint8_t b)
 {
     return a <= b ? b : a;
 }
-static __inline float color_value_minf(float a, float b)
+static __inline uint8_t color_value_min(uint8_t a, uint8_t b)
 {
     return a > b ? b : a;
+}
+
+static __inline float color_value_fabs(float f)
+{
+    return f > 0 ? f : -f;
 }
 
 static __inline void color_value_to_hsv(uint32_t rgb, float *h, float *s, float *v)
@@ -353,19 +356,20 @@ static __inline void color_value_to_hsv(uint32_t rgb, float *h, float *s, float 
     uint8_t r = (uint8_t)(rgb >> 16);
     uint8_t g = (uint8_t)(rgb >> 8);
     uint8_t b = (uint8_t)rgb;
+    uint8_t max_ = color_value_max(color_value_max(r, g), b);
+    uint8_t min_ = color_value_min(color_value_min(r, g), b);
+    float max_value = max_ / 255.0f, min_value = min_ / 255.0f;
     float r_value = r / 255.0f, g_value = g / 255.0f, b_value = b / 255.0f;
-    float max_value = color_value_maxf(color_value_maxf(r_value, g_value), b_value);
-    float min_value = color_value_minf(color_value_minf(r_value, g_value), b_value);
     float hue = max_value - min_value, sat;
     if (hue > 0)
     {
-        if (max_value == r_value)
+        if (max_ == r)
         {
             hue = (g_value - b_value) / hue;
             if (hue < 0)
                 hue += 6.0f;
         }
-        else if (max_value == g_value)
+        else if (max_ == g)
         {
             hue = 2.0f + (b_value - r_value) / hue;
         }
@@ -424,9 +428,9 @@ static __inline void color_value_from_hsv(uint32_t *rgb, float h, float s, float
             break;
         }
     }
-    r_value = (uint8_t)(r * 255 + 0.5);
-    g_value = (uint8_t)(g * 255 + 0.5);
-    b_value = (uint8_t)(b * 255 + 0.5);
+    r_value = (uint8_t)(r * 255 + 0.5f);
+    g_value = (uint8_t)(g * 255 + 0.5f);
+    b_value = (uint8_t)(b * 255 + 0.5f);
     *rgb = (r_value << 16) | (g_value << 8) | b_value;
 }
 
@@ -485,19 +489,19 @@ static __inline void color_value_unittest(void)
     assert(color_value_web_safe(0xFFEE00) == 0xFFFF00);
 
     color_value_to_hsv(0x000000, &h, &s, &v);
-    assert(h == 0 && s == 0 && v == 0.0);
+    assert(h == 0.0f && s == 0.0f && v == 0.0f);
     color_value_to_hsv(0xFFFFFF, &h, &s, &v);
-    assert(h == 0 && s == 0 && v == 1.0);
+    assert(h == 0.0f && s == 0.0f && v == 1.0f);
     color_value_to_hsv(0xFF0000, &h, &s, &v);
-    assert(h == 0 && s == 1.0 && v == 1.0);
+    assert(h == 0.0f && s == 1.0f && v == 1.0f);
     color_value_to_hsv(0x00FF00, &h, &s, &v);
-    assert(fabs(h - 0.3333) < 0.001 && s == 1.0 && v == 1.0);
+    assert(color_value_fabs(h - 0.3333f) < 0.001f && s == 1.0f && v == 1.0f);
     color_value_to_hsv(0x0000FF, &h, &s, &v);
-    assert(fabs(h - 0.6667) < 0.001 && s == 1.0 && v == 1.0);
+    assert(color_value_fabs(h - 0.6667f) < 0.001f && s == 1.0f && v == 1.0f);
     color_value_to_hsv(0xFF00FF, &h, &s, &v);
-    assert(fabs(h - 0.8333) < 0.001 && s == 1.0 && v == 1.0);
+    assert(color_value_fabs(h - 0.8333f) < 0.001f && s == 1.0f && v == 1.0f);
     color_value_to_hsv(0xFFFF00, &h, &s, &v);
-    assert(fabs(h - 0.1667) < 0.001 && s == 1.0 && v == 1.0);
+    assert(color_value_fabs(h - 0.1667f) < 0.001f && s == 1.0f && v == 1.0f);
 
     color_value_from_hsv(&rgb, 0, 0, 0);
     assert(rgb == 0x000000);
@@ -505,24 +509,16 @@ static __inline void color_value_unittest(void)
     assert(rgb == 0xFFFFFF);
     color_value_from_hsv(&rgb, 0, 1, 1);
     assert(rgb == 0xFF0000);
-    color_value_from_hsv(&rgb, 0.3333, 1, 1);
+    color_value_from_hsv(&rgb, 0.3333f, 1, 1);
     assert(rgb == 0x00FF00);
-    color_value_from_hsv(&rgb, 0.6667, 1, 1);
+    color_value_from_hsv(&rgb, 0.6667f, 1, 1);
     assert(rgb == 0x0000FF);
-    color_value_from_hsv(&rgb, 0.8333, 1, 1);
+    color_value_from_hsv(&rgb, 0.8333f, 1, 1);
     assert(rgb == 0xFF00FF);
-    color_value_from_hsv(&rgb, 0.1667, 1, 1);
+    color_value_from_hsv(&rgb, 0.1667f, 1, 1);
     assert(rgb == 0xFFFF00);
 
     puts("OK");
 }
-
-#if 0
-int main(void)
-{
-    color_value_unittest();
-    return 0;
-}
-#endif
 
 #endif  /* ndef COLOR_VALUE_H_ */
